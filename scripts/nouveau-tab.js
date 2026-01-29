@@ -40,7 +40,7 @@ async function initTesseractWorker() {
     
     // Configuration for Chrome extension
     const workerPath = chrome.runtime.getURL('libs/worker.min.js');
-    const corePath = chrome.runtime.getURL('libs/tesseract.min.js');
+    const corePath = chrome.runtime.getURL('libs/tesseract-core.wasm.js');
     
     console.log('Worker path:', workerPath);
     console.log('Core path:', corePath);
@@ -48,6 +48,7 @@ async function initTesseractWorker() {
     tesseractWorker = await Tesseract.createWorker('eng', 1, {
       workerPath: workerPath,
       corePath: corePath,
+      workerBlobURL: false,
       langPath: 'https://tessdata.projectnaptha.com/4.0.0',
       logger: (m) => {
         if (m.status === 'recognizing text') {

@@ -20,11 +20,11 @@
     "https://warframe.market/*"
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; script-src-elem 'self'; worker-src 'self'; object-src 'self'"
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
   },
   "web_accessible_resources": [
     {
-      "resources": ["libs/*.js"],
+      "resources": ["libs/*"],
       "matches": ["<all_urls>"]
     }
   ],
