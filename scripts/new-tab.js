@@ -9,7 +9,7 @@ let knownWeapons = [];
 let knownAttributes = [];
 
 const KNOWN_POLARITIES = [
-  'Madurai', 'Vazarin', 'Naramon'
+  'madurai', 'vazarin', 'naramon'
 ];
 
 async function loadKnownWeapons() {
@@ -30,6 +30,102 @@ export function initNouveauTab() {
   initTesseractWorker();
   loadKnownWeapons();
   loadKnownAttributes();
+  injectStyles();
+}
+
+function injectStyles() {
+  const style = document.createElement('style');
+  style.textContent = `
+    .fab-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background-color: #10b981;
+      color: white;
+      font-size: 32px;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s, background-color 0.2s;
+      z-index: 1000;
+    }
+    .fab-btn:hover {
+      transform: scale(1.1);
+      background-color: #059669;
+    }
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      z-index: 2000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(2px);
+    }
+    .modal-content {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    .close-modal-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+    }
+    .polarity-selector {
+      display: flex;
+      gap: 16px;
+      margin-top: 8px;
+    }
+    .polarity-option {
+      cursor: pointer;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 8px;
+      opacity: 0.6;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .polarity-option:hover {
+      opacity: 0.9;
+      background: #f9fafb;
+    }
+    .polarity-option.selected {
+      border-color: #10b981;
+      opacity: 1;
+      background: #ecfdf5;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    }
+    .polarity-option img {
+      width: 32px;
+      height: 32px;
+      display: block;
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 /**
@@ -303,9 +399,21 @@ function renderRivenForm(data) {
     similarContainer.style.display = 'none';
   }
 
-  // Create Form HTML
+  // Create Form HTML using the helper
+  const form = createRivenFormElement(data, false);
+  formContainer.appendChild(form);
+}
+
+/**
+ * Creates the Riven form DOM element
+ * @param {Object} data - Riven data
+ * @param {boolean} isSaleMode - If true, adds sales fields (polarity) and changes button
+ * @returns {HTMLFormElement}
+ */
+function createRivenFormElement(data, isSaleMode = false) {
   const form = document.createElement('form');
   form.className = 'riven-form';
+  if (isSaleMode) form.classList.add('sale-mode');
   form.onsubmit = (e) => e.preventDefault();
 
   // Weapon Field
@@ -336,7 +444,8 @@ function renderRivenForm(data) {
   form.appendChild(attributesLabel);
 
   const attributesContainer = document.createElement('div');
-  attributesContainer.id = 'attributesContainer';
+  // Use a unique ID or class if multiple forms exist, but for now we rely on DOM traversal or local var
+  attributesContainer.className = 'attributes-container'; 
   form.appendChild(attributesContainer);
 
   // Add parsed attributes (or empty rows if none)
@@ -369,59 +478,139 @@ function renderRivenForm(data) {
   mrGroup.appendChild(mrInput);
   form.appendChild(mrGroup);
 
-  // Rolls (Unrolled Checkbox)
-  const rollsGroup = document.createElement('div');
-  rollsGroup.className = 'form-group';
-  rollsGroup.style.display = 'flex';
-  rollsGroup.style.alignItems = 'center';
-  rollsGroup.style.marginTop = '8px';
+  // Polarity (Sale Mode Only)
+  if (isSaleMode) {
+    const polarityGroup = createFormGroup('Polarity');
+    const polarityContainer = document.createElement('div');
+    polarityContainer.className = 'polarity-selector';
+    
+    // Hidden input to store value
+    const polarityInput = document.createElement('input');
+    polarityInput.type = 'hidden';
+    polarityInput.name = 'polarity';
+    polarityInput.value = data.polarity || ''; // Default if exists
+    polarityGroup.appendChild(polarityInput);
 
-  const rollsLabel = document.createElement('label');
-  rollsLabel.style.display = 'flex';
-  rollsLabel.style.alignItems = 'center';
-  rollsLabel.style.cursor = 'pointer';
+    KNOWN_POLARITIES.forEach(pol => {
+      const option = document.createElement('div');
+      option.className = 'polarity-option';
+      if (polarityInput.value === pol) option.classList.add('selected');
+      
+      const img = document.createElement('img');
+      img.src = `icons/polarity/${pol}.png`;
+      img.alt = pol;
+      img.title = pol.charAt(0).toUpperCase() + pol.slice(1);
+      
+      option.appendChild(img);
+      
+      option.onclick = () => {
+        // Deselect all
+        polarityContainer.querySelectorAll('.polarity-option').forEach(el => el.classList.remove('selected'));
+        // Select this
+        option.classList.add('selected');
+        polarityInput.value = pol;
+      };
+      
+      polarityContainer.appendChild(option);
+    });
+    
+    polarityGroup.appendChild(polarityContainer);
+    form.appendChild(polarityGroup);
+  }
 
-  const rollsInput = document.createElement('input');
-  rollsInput.type = 'checkbox';
-  // Logic: unchecked if 0, checked otherwise
-  rollsInput.checked = (data.rolls || 0) == 0;
+  // Rolls (Unrolled Checkbox or Re-rolls input)
+  const rollsGroup = createFormGroup(isSaleMode ? 'Re-rolls' : 'Rolls');
   
-  const rollsText = document.createElement('span');
-  rollsText.textContent = 'unrolled';
-  rollsText.style.marginLeft = '8px';
-  rollsText.style.fontWeight = '600';
+  if (isSaleMode) {
+    // Input number for Sale Mode
+    const rollsInput = document.createElement('input');
+    rollsInput.type = 'number';
+    rollsInput.className = 'form-input';
+    rollsInput.value = data.rolls || 0;
+    rollsInput.min = 0;
+    rollsInput.name = 'rerolls';
+    rollsGroup.appendChild(rollsInput);
+  } else {
+    // Unrolled Checkbox for Search Mode
+    // We need to restructure the group a bit to match the previous layout (flex row)
+    rollsGroup.style.display = 'flex';
+    rollsGroup.style.alignItems = 'center';
+    rollsGroup.style.marginTop = '8px';
+    
+    // Clear the label added by createFormGroup because we want a custom layout
+    rollsGroup.innerHTML = ''; 
 
-  rollsLabel.appendChild(rollsInput);
-  rollsLabel.appendChild(rollsText);
-  rollsGroup.appendChild(rollsLabel);
+    const rollsLabel = document.createElement('label');
+    rollsLabel.style.display = 'flex';
+    rollsLabel.style.alignItems = 'center';
+    rollsLabel.style.cursor = 'pointer';
+
+    const rollsInput = document.createElement('input');
+    rollsInput.type = 'checkbox';
+    // Logic: unchecked if 0, checked otherwise
+    rollsInput.checked = (data.rolls || 0) == 0;
+    
+    const rollsText = document.createElement('span');
+    rollsText.textContent = 'unrolled';
+    rollsText.style.marginLeft = '8px';
+    rollsText.style.fontWeight = '600';
+
+    rollsLabel.appendChild(rollsInput);
+    rollsLabel.appendChild(rollsText);
+    rollsGroup.appendChild(rollsLabel);
+  }
+  
   form.appendChild(rollsGroup);
 
-  // Search Button
-  const searchBtn = document.createElement('button');
-  searchBtn.type = 'button';
-  searchBtn.className = 'btn btn-primary btn-block';
-  searchBtn.textContent = 'Search Similar Rivens';
-  searchBtn.style.marginTop = '16px';
-  searchBtn.onclick = () => {
-    const currentData = getFormDataFromDOM();
-    if (validateFormData(currentData)) {
-        findSimilarRivens(currentData);
-    }
-  };
-  form.appendChild(searchBtn);
+  // Action Button
+  const actionBtn = document.createElement('button');
+  actionBtn.type = 'button';
+  actionBtn.style.marginTop = '16px';
+  
+  if (isSaleMode) {
+    actionBtn.className = 'btn btn-block';
+    actionBtn.style.backgroundColor = '#10b981'; // Green
+    actionBtn.style.color = 'white';
+    actionBtn.textContent = 'Create Sale';
+    actionBtn.onclick = () => {
+      const currentData = getFormDataFromDOM(form);
+      if (validateFormData(currentData)) {
+        // Add Polarity check
+        const polarityVal = form.querySelector('input[name="polarity"]').value;
+        if (!polarityVal) {
+          alert('Please select a polarity.');
+          return;
+        }
+        currentData.polarity = polarityVal;
+        
+        console.log('Creating sale with data:', currentData);
+        // API call will be implemented later
+        alert('Ready to create sale! (API pending)\nPolarity: ' + polarityVal);
+      }
+    };
+  } else {
+    actionBtn.className = 'btn btn-primary btn-block';
+    actionBtn.textContent = 'Search Similar Rivens';
+    actionBtn.onclick = () => {
+      const currentData = getFormDataFromDOM(form);
+      if (validateFormData(currentData)) {
+          findSimilarRivens(currentData);
+      }
+    };
+  }
+  
+  form.appendChild(actionBtn);
 
-  formContainer.appendChild(form);
+  return form;
 }
 
-function getFormDataFromDOM() {
-  const form = document.querySelector('.riven-form');
+function getFormDataFromDOM(formElement) {
+  // Use passed form or default to main query selector
+  const form = formElement || document.querySelector('.riven-form');
   if (!form) return null;
 
-  const weaponSelect = form.querySelector('select:first-of-type'); // Assuming first select is weapon
-  // Better to use IDs or specific classes, but based on renderRivenForm:
-  // weaponSelect is in the first form-group.
-  
-  // Let's rely on the structure we built in renderRivenForm
+  const weaponSelect = form.querySelector('select:first-of-type'); 
+  // Let's use the container scope
   const weaponValue = form.querySelector('.form-group:nth-of-type(1) select').value;
   
   const stats = [];
@@ -442,45 +631,33 @@ function getFormDataFromDOM() {
     }
   });
 
-  // Mastery Rank
-  const mrInput = form.querySelector('.form-group:nth-of-type(4) input'); // 1=Weapon, 2=Attrs Label(not group), 3=AttributesContainer(not group), AddBtn, 4=MR Group
-  // The structure is:
-  // Group(Weapon)
-  // Label(Attributes)
-  // Div(AttributesContainer)
-  // Button(Add)
-  // Group(Mastery)
-  // Group(Rolls)
-  
-  // Let's use robust selectors if possible, or traverse childNodes carefully.
-  // We added classes or IDs?
-  // attributesContainer has ID 'attributesContainer'.
-  
-  // To be safe, let's look for inputs by their context or add IDs in renderRivenForm.
-  // But modifying renderRivenForm to add IDs is easier.
-  // For now I will deduce from the DOM structure assumed.
-
-  // Mastery is the input after "Mastery Rank" label.
-  // We can select all form-groups and check their label.
-  const formGroups = form.querySelectorAll('.form-group');
+  // Mastery Rank logic (finding the input in the group labeled "Mastery Rank")
   let mrValue = null;
-  
+  const formGroups = form.querySelectorAll('.form-group');
   formGroups.forEach(group => {
     const label = group.querySelector('label');
     if (label && label.textContent === 'Mastery Rank') {
-      mrValue = group.querySelector('input').value;
+      const input = group.querySelector('input');
+      if (input) mrValue = input.value;
     }
   });
 
   // Rolls
-  const rollsInput = form.querySelector('input[type="checkbox"]');
-  const unrolled = rollsInput ? rollsInput.checked : false;
+  let rollsValue = 0;
+  if (form.classList.contains('sale-mode')) {
+      const rollsInput = form.querySelector('input[name="rerolls"]');
+      rollsValue = rollsInput ? parseInt(rollsInput.value) : 0;
+  } else {
+      const rollsInput = form.querySelector('input[type="checkbox"]');
+      const unrolled = rollsInput ? rollsInput.checked : false;
+      rollsValue = unrolled ? 0 : 1;
+  }
 
   return {
     weaponName: weaponValue,
     stats: stats,
     mastery: mrValue,
-    rolls: unrolled ? 0 : 1 // 0 if unrolled, >0 otherwise
+    rolls: rollsValue
   };
 }
 
@@ -634,6 +811,10 @@ async function findSimilarRivens(data) {
 }
 
 function renderSimilarRivensLoading() {
+  // Remove existing FAB if any
+  const existingFab = document.getElementById('createSaleFab');
+  if (existingFab) existingFab.remove();
+
   const ocrResultsSection = document.getElementById('ocrResultsSection');
   const formContainer = document.getElementById('rivenFormContainer');
   
@@ -760,6 +941,77 @@ function renderSimilarRivens(results, originalData) {
       }
     }
   });
+
+  // Add FAB for creating sale
+  addCreateSaleButton(originalData, similarContainer);
+}
+
+function addCreateSaleButton(data, container) {
+  // Remove existing FAB first to avoid duplicates
+  const existingFab = document.getElementById('createSaleFab');
+  if (existingFab) existingFab.remove();
+
+  const fab = document.createElement('button');
+  fab.id = 'createSaleFab';
+  fab.className = 'fab-btn';
+  fab.innerHTML = '+';
+  fab.title = 'Create Sale';
+  fab.onclick = () => openSaleModal(data);
+  
+  // Ensure we append to body to be fixed, or container if we want it relative
+  // User asked for floating, usually attached to body is safest for fixed positioning
+  document.body.appendChild(fab);
+  
+  // Clean up FAB when leaving this view (handled by clearing body? No, body persists)
+  // We should track the FAB and remove it when switching back to form
+  // Hooking into the "Back to Form" button in renderSimilarRivens
+  const backBtn = container.querySelector('.btn-secondary');
+  if (backBtn) {
+    const originalClick = backBtn.onclick;
+    backBtn.onclick = () => {
+      fab.remove();
+      if (originalClick) originalClick();
+    };
+  }
+}
+
+function openSaleModal(data) {
+  // Create Modal Overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  
+  // Content
+  const content = document.createElement('div');
+  content.className = 'modal-content';
+  
+  // Close Button
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'close-modal-btn';
+  closeBtn.innerHTML = '×';
+  closeBtn.onclick = () => document.body.removeChild(overlay);
+  content.appendChild(closeBtn);
+  
+  // Title
+  const title = document.createElement('h2');
+  title.textContent = 'Create Sale';
+  title.style.marginTop = '0';
+  title.style.marginBottom = '20px';
+  content.appendChild(title);
+  
+  // Render Form in "Sale Mode"
+  const form = createRivenFormElement(data, true);
+  content.appendChild(form);
+  
+  overlay.appendChild(content);
+  
+  // Close on outside click
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      document.body.removeChild(overlay);
+    }
+  });
+  
+  document.body.appendChild(overlay);
 }
 
 function createAuctionCell(auction, originalPositiveAttrs, originalNegativeAttrs, query = null) {
