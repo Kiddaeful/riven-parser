@@ -27,9 +27,6 @@ export function createAuctionCell(auction, originalPositiveAttrs, originalNegati
     attrsDiv.style.flexWrap = 'wrap';
     attrsDiv.style.gap = '6px';
   
-    console.log(query);
-    console.log(query._added);
-  
     if (auction.item && auction.item.attributes) {
       auction.item.attributes.forEach(attr => {
         const tag = document.createElement('span');

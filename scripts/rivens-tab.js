@@ -17,7 +17,7 @@ export async function refreshRivensTab() {
   const container = document.getElementById('rivensTab');
   if (!container) return;
 
-  container.innerHTML = '<div style="text-align:center; padding: 20px;">Chargement de vos enchères... ⏳</div>';
+  container.innerHTML = '<div style="text-align:center; padding: 20px;">loading your auctions... ⏳</div>';
 
   try {
     const user = await window.WarframeAPI.getUserInfo();
@@ -26,7 +26,7 @@ export async function refreshRivensTab() {
       return;
     }
 
-    const auctions = await window.WarframeAPI.getProfileAuctions(user.id);
+    const auctions = await window.WarframeAPI.getProfileAuctions(user.slug);
     
     container.innerHTML = '';
     
@@ -39,7 +39,7 @@ export async function refreshRivensTab() {
     const header = document.createElement('div');
     header.style.padding = '10px 10px 0 10px';
     header.style.fontWeight = 'bold';
-    header.textContent = `Vos enchères (${auctions.length})`;
+    header.textContent = `Your auctions (${auctions.length})`;
     container.appendChild(header);
 
     const list = document.createElement('div');
