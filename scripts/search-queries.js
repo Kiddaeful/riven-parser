@@ -1,3 +1,9 @@
+export const similarAttributes = [
+  ['toxin_damage', 'heat_damage', 'electric_damage', 'cold_damage'],
+  ['slash_damage', 'impact_damage', 'puncture_damage'],
+  ['critical_chance', 'critical_damage', 'base_damage_/_melee_damage', 'multishot', 'status_chance'],
+];
+
 /**
  * Generates search queries for finding similar Rivens
  * @param {Object} data - The Riven data from the form
@@ -59,6 +65,34 @@ export function generateSimilarRivenQueries(data, knownWeapons) {
     });
   }
 
+  // New rules for similar attributes
+  positiveStats.forEach((stat, index) => {
+    const attrName = stat.matchedAttribute.url_name;
+    
+    // Find if this attribute belongs to a similar group
+    const similarGroup = similarAttributes.find(group => group.includes(attrName));
+    
+    if (similarGroup) {
+      // For each other attribute in the group
+      similarGroup.forEach(similarAttr => {
+        if (similarAttr !== attrName) {
+            // Create a new list of positives with the replacement
+            const newPositiveNames = positiveStats.map(s => s.matchedAttribute.url_name);
+            newPositiveNames[index] = similarAttr;
+            
+            potentialRules.push({
+                ...baseQuery,
+                positive_stats: newPositiveNames.join(','),
+                ...(negativesStr ? { negative_stats: negativesStr } : {}),
+                _label: `Similar attributes`,
+                _removed: attrName,
+                _added: similarAttr,
+            });
+        }
+      });
+    }
+  });
+
   // Rule 2: If there are 3 positive attributes, search without the last one
   if (positiveStats.length === 3) {
     const subset = positiveStats.slice(0, 2).map(s => s.matchedAttribute.url_name).join(',');
@@ -66,7 +100,7 @@ export function generateSimilarRivenQueries(data, knownWeapons) {
       ...baseQuery,
       positive_stats: subset,
       ...(negativesStr ? { negative_stats: negativesStr } : {}),
-      _label: 'Similar without last attribute',
+      _label: 'Similar one less attribute',
     });
   }
 
@@ -77,7 +111,7 @@ export function generateSimilarRivenQueries(data, knownWeapons) {
       ...baseQuery,
       positive_stats: subset,
       ...(negativesStr ? { negative_stats: negativesStr } : {}),
-      _label: 'Similar without first attribute',
+      _label: 'Similar one less attribute',
     });
   }
 

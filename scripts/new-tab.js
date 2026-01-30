@@ -1,6 +1,6 @@
 // Module for "New" tab
 import { parseRivenData, validateRivenData, formatRivenData } from './riven-parser.js';
-import { generateSimilarRivenQueries } from './search-queries.js';
+import { generateSimilarRivenQueries, similarAttributes } from './search-queries.js';
 
 // Tesseract worker instance
 let tesseractWorker = null;
@@ -618,7 +618,7 @@ async function findSimilarRivens(data) {
 
       // If we need to continue (haven't found 3 yet and have more queries), wait 1s to respect rate limit
       if (successfulQueriesCount < 3 && (i + BATCH_SIZE) < queries.length) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1500));
       }
     }
 
@@ -705,7 +705,7 @@ function renderSimilarRivens(results, originalData) {
       
       // Limit to top 5 results per query to avoid clutter
       res.auctions.slice(0, 5).forEach(auction => {
-        list.appendChild(createAuctionCell(auction, originalPositiveAttrs, originalNegativeAttrs));
+        list.appendChild(createAuctionCell(auction, originalPositiveAttrs, originalNegativeAttrs, res.query));
       });
       
       if (res.auctions.length > 5) {
@@ -723,7 +723,7 @@ function renderSimilarRivens(results, originalData) {
   });
 }
 
-function createAuctionCell(auction, originalPositiveAttrs, originalNegativeAttrs) {
+function createAuctionCell(auction, originalPositiveAttrs, originalNegativeAttrs, query = null) {
   const cell = document.createElement('div');
   cell.className = 'auction-cell';
   cell.style.border = '1px solid #eee';
@@ -752,6 +752,9 @@ function createAuctionCell(auction, originalPositiveAttrs, originalNegativeAttrs
   attrsDiv.style.flexWrap = 'wrap';
   attrsDiv.style.gap = '6px';
 
+  console.log(query);
+  console.log(query._added);
+
   if (auction.item && auction.item.attributes) {
     auction.item.attributes.forEach(attr => {
       const tag = document.createElement('span');
@@ -764,10 +767,21 @@ function createAuctionCell(auction, originalPositiveAttrs, originalNegativeAttrs
       const isNegative = attr.value < 0;
 
       let matchType = 'none';
+      
+      // Exact Match
       if (!isNegative && originalPositiveAttrs.includes(attr.url_name)) {
         matchType = 'positive';
       } else if (isNegative && originalNegativeAttrs.includes(attr.url_name)) {
         matchType = 'negative';
+      }
+      
+      // Check for swapped/similar attribute
+      if (matchType === 'none' && query && query._added) {
+        // query._added is the attribute we searched for (the replacement)
+        // query._removed is the attribute from the original Riven that was replaced
+        if (attr.url_name === query._added) {
+           matchType = 'similar';
+        }
       }
 
       if (matchType === 'positive') {
@@ -778,6 +792,11 @@ function createAuctionCell(auction, originalPositiveAttrs, originalNegativeAttrs
         tag.style.background = '#fee2e2'; // Red-ish
         tag.style.color = '#991b1b';
         tag.style.border = '1px solid #fecaca';
+      } else if (matchType === 'similar') {
+        tag.style.background = '#fef3c7'; // Yellow-ish
+        tag.style.color = '#92400e';
+        tag.style.border = '1px solid #fde68a';
+        tag.title = `Similar to ${query._removed.replace(/_/g, ' ')}`;
       } else {
         tag.style.background = '#f3f4f6'; // Grey
         tag.style.color = '#4b5563';
