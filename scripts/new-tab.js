@@ -583,14 +583,53 @@ async function findSimilarRivens(data) {
 
   renderSimilarRivensLoading();
 
+  const allResults = [];
+  let successfulQueriesCount = 0;
+  const BATCH_SIZE = 3; // Rate limit: 3 requests per second
+
   try {
-    const results = await Promise.all(queries.map(async (q) => {
-      const auctions = await WarframeAPI.searchAuctions(q);
-      return { query: q, auctions };
-    }));
-    renderSimilarRivens(results, data);
+    for (let i = 0; i < queries.length; i += BATCH_SIZE) {
+      // If we have found 3 queries with data, stop
+      if (successfulQueriesCount >= 3) {
+        break;
+      }
+
+      // Take a batch
+      const batch = queries.slice(i, i + BATCH_SIZE);
+      
+      // Execute the batch
+      const batchResults = await Promise.all(batch.map(async (q) => {
+        try {
+          const auctions = await WarframeAPI.searchAuctions(q);
+          return { query: q, auctions };
+        } catch (err) {
+          console.error("Error fetching similar riven query", q, err);
+          return { query: q, auctions: [] }; // Treat error as empty result
+        }
+      }));
+
+      // Process results
+      for (const res of batchResults) {
+        allResults.push(res);
+        if (res.auctions && res.auctions.length > 0) {
+          successfulQueriesCount++;
+        }
+      }
+
+      // If we need to continue (haven't found 3 yet and have more queries), wait 1s to respect rate limit
+      if (successfulQueriesCount < 3 && (i + BATCH_SIZE) < queries.length) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+
+    renderSimilarRivens(allResults, data);
+
   } catch (err) {
     console.error("Error fetching similar rivens", err);
+    // Even if error, render what we have
+    if (allResults.length > 0) {
+      renderSimilarRivens(allResults, data);
+    }
   }
 }
 

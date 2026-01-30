@@ -96,9 +96,8 @@ export function generateSimilarRivenQueries(data, knownWeapons) {
     }
   }
 
-  // Select first 2 applicable rules
-  const selectedRules = potentialRules.slice(0, 2);
-  queries.push(...selectedRules);
+  // Return all potential rules to allow iteration until data is found
+  queries.push(...potentialRules);
 
   return queries;
 }
