@@ -334,12 +334,12 @@ async function createAuction(auctionData) {
 
 /**
  * Récupère les enchères d'un profil
- * @param {string} userId - ID de l'utilisateur
+ * @param {string} slug - ID de l'utilisateur
  * @returns {Promise<Array>} Liste des enchères
  */
-async function getProfileAuctions(userId) {
+async function getProfileAuctions(slug) {
   try {
-    const response = await fetch(`${API_BASE_URL}/profile/${userId}/auctions`, {
+    const response = await fetch(`${API_BASE_URL}/profile/${slug}/auctions`, {
       method: 'GET',
       headers: {
         'Language': 'en'
