@@ -1,7 +1,7 @@
-// Script for Riven Market sidepanel
+// Script for Riven reader sidepanel
 
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('Riven Market sidepanel loaded');
+  console.log('Riven reader sidepanel loaded');
   
   // Check authentication status on load
   await checkAuthStatus();
@@ -133,7 +133,6 @@ async function handleLogin(event) {
       // Show main page
       await showMainPage();
     } else {
-      console.error('Sign in failed:', result.error);
       showError(result.error || 'Incorrect credentials. Please try again.');
     }
   } catch (error) {

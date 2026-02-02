@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Riven Market",
+  "name": "Riven reader",
   "version": "1.0.0",
   "description": "Extension Chrome pour le marché Riven",
   "icons": {
@@ -29,7 +29,7 @@
     }
   ],
   "action": {
-    "default_title": "Ouvrir Riven Market"
+    "default_title": "Ouvrir Riven reader"
   },
   "background": {
     "service_worker": "background.js"

@@ -1,4 +1,4 @@
-// Service worker pour l'extension Riven Market
+// Service worker pour l'extension Riven reader
 
 // Ouvrir le sidepanel quand on clique sur l'icône de l'extension
 chrome.action.onClicked.addListener((tab) => {
@@ -7,7 +7,7 @@ chrome.action.onClicked.addListener((tab) => {
 
 // Gestion de l'installation de l'extension
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('Riven Market extension installée avec succès');
+  console.log('Riven reader extension installée avec succès');
 });
 
 // Écouter les messages du sidepanel

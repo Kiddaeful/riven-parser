@@ -1,4 +1,4 @@
-# Riven Market - Extension Chrome
+# Riven reader - Extension Chrome
 
 Extension Chrome avec sidepanel pour faciliter les interactions avec Warframe Market via l'API publique.
 
