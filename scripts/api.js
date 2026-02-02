@@ -66,13 +66,15 @@ async function signIn(email, password) {
       
       try {
         const errorData = JSON.parse(responseText);
-        if (errorData.error) {
-          errorMessage = errorData.error;
+        if (errorData.error.email) {
+          errorMessage = errorData.error.email[0];
+        } else {
+          errorMessage = errorData.error.password[0];
         }
       } catch (e) {
         // Ignorer les erreurs de parsing
       }
-      
+      console.log('Error message:', errorMessage);
       throw new Error(errorMessage);
     }
     
@@ -111,11 +113,10 @@ async function signIn(email, password) {
     };
     
   } catch (error) {
-    console.error('Erreur de connexion:', error);
     
     return {
       success: false,
-      error: error.message
+      error: error
     };
   }
 }
