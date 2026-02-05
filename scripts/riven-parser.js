@@ -495,14 +495,28 @@ function extractStats(text) {
   const stats = [];
   
   // Regex patterns for stats
-  // Examples: "+120.5% Critical Chance", "-45.2% Fire Rate"
-  const statPattern = /([+-])\s*(\d+\.?\d*)\s*%\s*(.+?)(?=\n|$)/gi;
+  // Examples: "+120.5% Critical Chance", "-45.2% Fire Rate", "+0 4/Damage"
+  // Handles OCR errors like spaces in numbers ("0 4" -> 0.4), missing %, or "/" instead of "%"
+  const statPattern = /([+-])\s*((?:\d+(?:[.,\s]\d+)*))\s*[%/]?\s*([a-zA-Z].+?)(?=\n|$)/gi;
   
   let match;
   while ((match = statPattern.exec(text)) !== null) {
+    let rawValue = match[2];
+    
+    // Clean up value: replace spaces and commas with dots
+    rawValue = rawValue.replace(/[\s,]/g, '.');
+    
+    let value = parseFloat(rawValue);
+    let type = match[1] === '+' ? 'positive' : 'negative';
+
+    // Rule: 0 counts as negative
+    if (value === 0) {
+      type = 'negative';
+    }
+
     stats.push({
-      type: match[1] === '+' ? 'positive' : 'negative',
-      value: parseFloat(match[2]),
+      type: type,
+      value: value,
       name: match[3].trim()
     });
   }
