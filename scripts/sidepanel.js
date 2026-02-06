@@ -1,6 +1,56 @@
 // Script for Riven reader sidepanel
 
+let isToastVisible = false;
+
+/**
+ * Displays a toast notification
+ * @param {string} message - Message to display
+ * @param {string} type - Type of toast (info, success, error, warning)
+ */
+window.showToast = function(message, type = 'info') {
+  console.log('Showing toast:', message, type);
+  if (isToastVisible) return;
+
+  isToastVisible = true;
+  const container = document.getElementById('toast-container');
+  
+  if (!container) return;
+
+  console.log('Container found:', container);
+
+  // Create toast element
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `
+    <span class="toast-icon">${getIconForType(type)}</span>
+    <span class="toast-message">${message}</span>
+  `;
+  
+  container.appendChild(toast);
+  
+  // Remove after 3 seconds
+  setTimeout(() => {
+    toast.style.animation = 'fadeOut 0.3s ease-in forwards';
+    toast.addEventListener('animationend', () => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+      isToastVisible = false;
+    });
+  }, 3000);
+}
+
+function getIconForType(type) {
+  switch (type) {
+    case 'error': return '❌';
+    case 'success': return '✅';
+    case 'warning': return '⚠️';
+    default: return 'ℹ️';
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+
   console.log('Riven reader sidepanel loaded');
   
   // Check authentication status on load

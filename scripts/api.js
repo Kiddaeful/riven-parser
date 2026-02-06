@@ -2,6 +2,18 @@
 
 const API_BASE_URL = 'https://api.warframe.market/v1';
 
+/**
+ * Checks for rate limiting and displays a toast if necessary
+ * @param {Response} response - The fetch response object
+ */
+function checkRateLimit(response) {
+  if (response.status === 429) {
+    console.warn('API Rate Limited (429)');
+    if (typeof window.showToast === 'function') {
+      window.showToast('We are being rate limited.', 'error');
+    }
+  }
+}
 
 /**
  * Génère ou récupère un deviceId unique
@@ -60,6 +72,8 @@ async function signIn(email, password) {
     const responseText = await response.text();
     console.log('Corps de la réponse (premiers 200 caractères):', responseText.substring(0, 200));
     
+    checkRateLimit(response);
+
     if (!response.ok) {
       console.error('Erreur lors de la connexion:', response.status, responseText);
       let errorMessage = 'Erreur lors de la connexion';
@@ -203,6 +217,8 @@ async function authenticatedRequest(endpoint, options = {}) {
     headers
   });
 
+  checkRateLimit(response);
+
   if (!response.ok) {
     if (response.status === 401) {
       // Token invalide, déconnecter l'utilisateur
@@ -239,6 +255,8 @@ async function getRivenItems() {
       }
     });
 
+    checkRateLimit(response);
+
     if (!response.ok) {
       throw new Error(`Erreur API: ${response.status}`);
     }
@@ -263,6 +281,8 @@ async function getRivenAttributes() {
         'Language': 'en' // Par défaut en anglais
       }
     });
+
+    checkRateLimit(response);
 
     if (!response.ok) {
       throw new Error(`Erreur API: ${response.status}`);
@@ -302,6 +322,8 @@ async function searchAuctions(params) {
         'Language': 'en'
       }
     });
+
+    checkRateLimit(response);
 
     if (!response.ok) {
       throw new Error(`Erreur API: ${response.status}`);
@@ -382,6 +404,8 @@ async function getProfileAuctions(slug) {
         'Language': 'en'
       }
     });
+
+    checkRateLimit(response);
 
     if (!response.ok) {
       throw new Error(`Erreur API: ${response.status}`);
