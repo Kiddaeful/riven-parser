@@ -71,8 +71,9 @@ function injectStyles() {
       z-index: 2000;
       display: flex;
       justify-content: center;
-      align-items: center;
-      backdrop-filter: blur(2px);
+      align-items: flex-start;
+      overflow-y: auto;
+      padding-top: 420px;
     }
     .modal-content {
       background: white;
@@ -80,10 +81,11 @@ function injectStyles() {
       border-radius: 12px;
       width: 90%;
       max-width: 600px;
-      max-height: 90vh;
+      max-height: calc(100vh - 440px);
       overflow-y: auto;
       position: relative;
       box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      margin-bottom: 20px;
     }
     .close-modal-btn {
       position: absolute;
