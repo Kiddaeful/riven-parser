@@ -2,7 +2,7 @@
 import { createAuctionCell } from './auction-cell.js';
 import { parseRivenData, validateRivenData, generateRivenNames } from './riven-parser.js';
 import { generateSimilarRivenQueries } from './search-queries.js';
-import { preprocessImage } from './image-processor.js';
+import { preprocessImage, getTesseractConfig, cleanOCRText } from './image-processor.js';
 
 // Tesseract worker instance
 let tesseractWorker = null;
@@ -265,7 +265,12 @@ async function initTesseractWorker() {
         }
       }
     });
-    console.log('Tesseract worker initialized successfully');
+    
+    // Apply optimized Tesseract parameters for Riven mod OCR
+    const tesseractConfig = getTesseractConfig();
+    await tesseractWorker.setParameters(tesseractConfig);
+    
+    console.log('Tesseract worker initialized successfully with config:', tesseractConfig);
   } catch (error) {
     console.error('Failed to initialize Tesseract worker:', error);
   }
@@ -421,7 +426,14 @@ async function handleNewRivenImg(file, dataUrl) {
     // Perform OCR
     const result = await tesseractWorker.recognize(processedDataUrl);
     
-    console.log('OCR result:', result);
+    console.log('OCR raw result:', result.data.text);
+    
+    // Clean OCR text to remove noise and aberrant lines
+    const cleanedText = cleanOCRText(result.data.text);
+    console.log('OCR cleaned result:', cleanedText);
+    
+    // Update result with cleaned text
+    result.data.text = cleanedText;
     
     // Automatically analyze result instead of displaying raw text
     updateOCRStatus('🧠', 'Parsing Riven data...');
