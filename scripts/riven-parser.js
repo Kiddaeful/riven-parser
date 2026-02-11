@@ -351,7 +351,7 @@ function getPermutations(arr) {
  * @returns {Object} Parsed Riven data
  */
 export function parseRivenData(text, knownWeapons = [], knownAttributes = []) {
-  console.log('Parsing Riven data from text:', text, knownWeapons);
+  console.log('Parsing Riven data from text:', text);
   
   const rivenData = {
     weaponName: null,
@@ -464,16 +464,8 @@ function extractWeaponName(lines, knownWeapons = []) {
     // We scan up to 20 lines or all lines if fewer
     const linesToScan = lines.slice(0, 20);
 
-    for (const line of linesToScan) {
-      let cleanedLine = line;
-      // Remove "Riven Mod" or "Riven" suffix if present explicitly
-      const rivenMatch = line.match(/(.+?)\s*Riven/i);
-      if (rivenMatch) {
-        cleanedLine = rivenMatch[1].trim();
-      }
-
-      // Find candidates in this line
-      const candidatesInLine = findWeaponCandidates(cleanedLine, knownWeapons);
+    for (const line of linesToScan) {// Find candidates in this line
+      const candidatesInLine = findWeaponCandidates(line, knownWeapons);
       allCandidates.push(...candidatesInLine);
     }
 
@@ -487,18 +479,6 @@ function extractWeaponName(lines, knownWeapons = []) {
       });
 
       return allCandidates[0].name;
-    }
-  }
-
-  // Legacy behavior / Fallback if no known weapons or no match found
-  // ...
-  
-  // Look for lines containing "Riven" or weapon names
-  for (const line of lines) {
-    // Remove "Riven" suffix to get weapon name
-    const match = line.match(/(.+?)\s*Riven/i);
-    if (match) {
-      return match[1].trim();
     }
   }
   
@@ -559,7 +539,7 @@ function findWeaponCandidates(rawName, knownWeapons) {
     // Check if middle part of weapon name exists in raw string
     // Example: "ptico" from "opticor" should match well in "zrepticor"
     let distMiddle = Infinity;
-    if (normalizedWeapon.length >= 5) {
+    if (normalizedRaw.length >= 5) {
       const weaponMiddle = normalizedWeapon.substring(1, normalizedWeapon.length - 1);
       if (normalizedRaw.includes(weaponMiddle)) {
         distMiddle = 1; // Found middle part, low penalty
