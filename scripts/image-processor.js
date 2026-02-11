@@ -279,14 +279,12 @@ export function cleanOCRText(text) {
       // or be potential abbreviations (MR, etc.)
       if (wordCount === 1 && hasLetter && !hasNumber) {
         // Single short word without number (e.g., "ps", "PE", "Co") - likely noise
-        console.log(`Filtering short noise word: "${line}"`);
         continue;
       }
       if (wordCount >= 3 && line.length <= 15) {
         // Multiple tiny words cramped together (e.g., "Lr uy ig 4") - likely noise
         const avgWordLength = line.replace(/\s+/g, '').length / wordCount;
         if (avgWordLength < 2) {
-          console.log(`Filtering fragmented noise: "${line}"`);
           continue;
         }
       }
@@ -296,27 +294,23 @@ export function cleanOCRText(text) {
     const specialCharCount = (line.match(/[^a-zA-Z0-9\s+\-.%]/g) || []).length;
     const specialCharRatio = specialCharCount / line.length;
     if (specialCharRatio > 0.4) {
-      console.log(`Filtering noisy line (${(specialCharRatio * 100).toFixed(0)}% special chars): "${line}"`);
       continue;
     }
     
     // Skip lines with too many consecutive special chars (e.g., "---", "===")
     if (/[^a-zA-Z0-9\s]{4,}/.test(line)) {
-      console.log(`Filtering line with consecutive special chars: "${line}"`);
       continue;
     }
     
     // Skip lines that are likely decorative patterns
     // Example: lines with repeating patterns like "- - - -" or "= = ="
     if (/^[\s\-_=.]{4,}$/.test(line)) {
-      console.log(`Filtering decorative pattern: "${line}"`);
       continue;
     }
     
     // Skip lines with weird spacing patterns (likely OCR artifacts)
     // More than 5 spaces in a row is suspicious
     if (/\s{6,}/.test(line)) {
-      console.log(`Filtering line with excessive spacing: "${line}"`);
       continue;
     }
     
