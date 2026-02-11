@@ -110,6 +110,16 @@ The following data is stored in `chrome.storage.local`:
 - `isAuthenticated`: Login status (boolean)
 - `authDate`: Login date (ISO string)
 
+### Testing
+
+To test the extension, you can run the following command:
+
+```bash
+npm run test
+```
+
+This will run the test-riven-parser.js file and output the results to the console.
+
 ## 📋 Permissions
 
 - `sidePanel`: Allows use of the Sidepanel API
