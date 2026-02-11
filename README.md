@@ -11,6 +11,8 @@ Once you have an idea of the price, you can create the auction directly through 
 - See all your current auctions in the `Rivens` tab.
 You have the possibility to update the price of each auction and see current similar rivens in Warframe Market.
 
+<img src=demo.gif width=300 height="auto"/>
+
 ## 🚀 Installation
 
 ### Developer Mode

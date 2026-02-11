@@ -1,4 +1,3 @@
-- [x] Possibility to update an existing auction
-- [ ] Try to handle riven name better / FIX
+- [ ] Better pre-processing of the image
 - [ ] Upgrade the OCR for polarity
-- [x] Upgrade the OCR for rolls
+- [ ] Handle rate limit better
